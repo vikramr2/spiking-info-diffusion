@@ -22,7 +22,7 @@ def build_snn_from_edgelist(edgelist_path: str) -> SNN:
         neurons[node] = neuron
     
     # Create synapses based on the edgelist
-    for _, row in tqdm(edgelist.iterrows()):
+    for _, row in tqdm(edgelist.iterrows(), total=len(edgelist)):
         source = row["source"]
         target = row["target"]
         snn.create_synapse(neurons[source], neurons[target], weight=1.0, delay=1.0)
@@ -30,8 +30,8 @@ def build_snn_from_edgelist(edgelist_path: str) -> SNN:
     return snn, neurons, nodelist
 
 def all_to_all(net_neurons, feature_neurons, snn):
-    for feature in feature_neurons.values():
-        for neuron in net_neurons.values():
+    for feature in tqdm(feature_neurons.values(), desc="Creating feature synapses"):
+        for neuron in tqdm(net_neurons.values(), desc="Creating net synapses", leave=False):
             snn.create_synapse(feature, neuron, weight=0.5, delay=1.0)
 
 def save_checkpoint(snn: SNN, neurons: dict, feature_neurons: dict, path: str):
@@ -62,7 +62,7 @@ def main(
         help="Path to the edgelist file (CSV with two columns: source, target).",
     ),
     num_features: int = typer.Option(
-        16,
+        2048,
         "--num-features",
         help="Number of features for each neuron.",
     ),
